@@ -1,0 +1,130 @@
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
+from datetime import datetime, timedelta
+import time
+
+TARGET_DATE = datetime(2026, 9, 11)
+EXCLUDE_WORDS = ["사파리", "주키퍼", "동물원", "판다"]
+
+def parse_yt_date(date_str):
+    now = datetime(2026, 10, 5)
+    text = date_str.replace('수정됨', '').strip()
+    if any(k in text for k in ['시간', '분', '초', '방금']): return now
+    if '일 전' in text: return now - timedelta(days=int(''.join(filter(str.isdigit, text))))
+    if '주 전' in text: return now - timedelta(weeks=int(''.join(filter(str.isdigit, text))))
+    if '개월 전' in text: return now - timedelta(days=int(''.join(filter(str.isdigit, text))) * 30)
+    if '년 전' in text: return now - timedelta(days=int(''.join(filter(str.isdigit, text))) * 365)
+    return now
+
+driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
+driver.get("유튜브_영상_URL_입력")
+time.sleep(3)
+
+# 스크롤 10회 내리기 (댓글 로딩)
+for _ in range(10):
+    driver.execute_script("window.scrollTo(0, document.documentElement.scrollHeight);")
+    time.sleep(2)
+
+comments = driver.find_elements(By.CSS_SELECTOR, "#content-text")
+dates = driver.find_elements(By.CSS_SELECTOR, "#published-time-text")
+
+for d, c in zip(dates, comments):
+    parsed_date = parse_yt_date(d.text)
+    text = c.text
+    if parsed_date >= TARGET_DATE and not any(w in text for w in EXCLUDE_WORDS):
+        print(f"[{parsed_date.strftime('%Y-%m-%d')}] {text}")
+
+driver.quit()
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
+from datetime import datetime
+import time
+
+TARGET_DATE = datetime(2026, 9, 11)
+EXCLUDE_WORDS = ["사파리", "주키퍼", "동물원", "판다"]
+
+driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
+driver.get("https://www.instagram.com/")
+time.sleep(3)
+
+# 인스타그램 로그인
+driver.find_element(By.NAME, "username").send_keys("본인_인스타_아이디")
+driver.find_element(By.NAME, "password").send_keys("본인_인스타_비밀번호")
+driver.find_element(By.CSS_SELECTOR, "button[type='submit']").click()
+time.sleep(5)
+
+# 해시태그 검색 결과 페이지 이동
+driver.get("https://www.instagram.com/explore/tags/블러드시티제로/")
+time.sleep(5)
+
+# 첫 번째 게시글 클릭
+posts = driver.find_elements(By.CSS_SELECTOR, "div._aagw")
+if posts:
+    posts[0].click()
+    time.sleep(3)
+
+    # 본문 텍스트 추출 및 필터링
+    text_elements = driver.find_elements(By.CSS_SELECTOR, "span._aaco")
+    if text_elements:
+        text = text_elements[0].text
+        if not any(w in text for w in EXCLUDE_WORDS):
+            print("게시글 내용:", text)
+
+driver.quit()
+import time
+import pyperclip
+from datetime import datetime
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.common.action_chains import ActionChains
+
+TARGET_DATE = datetime(2026, 9, 11)
+EXCLUDE_WORDS = ["사파리", "주키퍼", "동물원", "판다"]
+
+driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
+
+# 네이버 우회 로그인
+driver.get("https://nid.naver.com/nidlogin.login")
+time.sleep(2)
+
+pyperclip.copy("jwbae1020")
+driver.find_element(By.ID, "id").click()
+ActionChains(driver).key_down(Keys.CONTROL).send_keys('v').key_up(Keys.CONTROL).perform()
+time.sleep(1)
+
+pyperclip.copy(" dpqpfosem *9")
+driver.find_element(By.ID, "pw").click()
+ActionChains(driver).key_down(Keys.CONTROL).send_keys('v').key_up(Keys.CONTROL).perform()
+time.sleep(1)
+
+driver.find_element(By.ID, "log.login").click()
+time.sleep(3)
+
+# 카페 게시판 이동
+driver.get("수집할_네이버_카페_게시판_URL")
+time.sleep(3)
+
+# 네이버 카페는 iframe 구조이므로 내부로 포커스 전환 필수
+driver.switch_to.frame("cafe_main")
+
+articles = driver.find_elements(By.CSS_SELECTOR, "div.article-board td.td_article")
+dates = driver.find_elements(By.CSS_SELECTOR, "div.article-board td.td_date")
+
+for article, d in zip(articles, dates):
+    title = article.text
+    # 2026.09.12 형식 날짜 파싱
+    try:
+        post_date = datetime.strptime(d.text.strip(), "%Y.%m.%d.")
+        if post_date >= TARGET_DATE and not any(w in title for w in EXCLUDE_WORDS):
+            print(f"[{post_date.strftime('%Y-%m-%d')}] {title}")
+    except:
+        continue
+
+driver.quit()
